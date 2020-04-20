@@ -1,0 +1,251 @@
+---
+title: "Retrieving data"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+getwd()
+#install.packages("dataRetrieval")
+library(dataRetrieval)
+library(tidyverse)
+library(cowplot)
+library(lubridate)
+library(readr)
+library(dplyr)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r}
+#manually import all NC counties with fecal coliform samples
+
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+All_county_fc <- left_join(NC_County_FC_station_all , results_all_NC_counties_fc, by= "MonitoringLocationIdentifier")
+summary(All_county_fc)
+head(All_county_fc$ActivityStartDate)
+is.Date(All_county_fc$ActivityStartDate)
+
+# Set date to date format
+All_county_fc$ActivityStartDate <- as.Date(All_county_fc$ActivityStartDate, format ="%m/%d/%y")
+is.Date(All_county_fc$ActivityStartDate)
+
+# Set theme
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "top")
+theme_set(mytheme)
+
+```
+### data chosen
+31625, Fecal coliform, mFC MF method, water, colonies/100 ml [Fecal
+coliform, .7 um-MF (col./100 mL)]?This is the mFC agar method (Britton and
+Greeson, 1987, p. 37-40). Parameter code 31625 was established when the 0.7
+micron filter was recommended for the mFC method.
+
+31616, Coliform, fecal, membrane filter m-FC media at 44.5 deg. C
+(colonies/100 ml)?This is the mFC agar method and is identical to parameter
+code 31625 except that it uses a 0.45 micron filter. The use of the 0.45
+micron filter is not recommended for fecal coliform analysis but this
+parameter code was used extensively in the past.
+
+### One-Way ANOVA test
+
+Does fecal coliform data differ among counties in N.C.?
+```{r}
+#Data that contains only NWIS fecal coliform data
+#one-way ANOVA of county fecal coliform data
+
+###data wrangle
+fecal_total_counties <- All_county_fc %>%
+  select(Date = ActivityStartDate, 
+         County_Code = CountyCode, 
+         FecalValue = ResultMeasureValue)
+view(fecal_total_counties)
+fecal_total_counties$County_Code <-as.factor(fecal_total_counties$County_Code)
+#notes: Date=ActivityStateDate returned NA values, column is Date factor
+
+Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code)) +
+  geom_line(aes(y = FecalValue)) +
+  ylim(0, 50000) +
+  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
+  theme(legend.position = "top")
+print(Total.fc.plot)
+#from the plot we can see all the N.C. Counties with fecal coliform data above 10,000 cfu/100ml
+# 11 counties with 10,000 or higher concentrations of fecal coliform is surface waters
+#mecklendburg county 119, madison county 115, harnett county 85, Green county 79, Duplin County 61, Davie County 59, Buncombe County 21, Durham County 63, Stanley county 167, Pitt county 147, no name county 109
+#highest values are counties 79, 119, 115, 147, 85,59
+
+fecal_total_counties$County <-as.numeric(fecal_total_counties$County_Code)
+
+# Format ANOVA as aov
+county_fc.anova <- aov(data = fecal_total_counties, County_Code ~ FecalValue)
+summary(county_fc.anova)
+#not statistically significant P value 0.216, and no effect was observed
+
+# Format ANOVA as lm
+county_fc_lm <- lm(data = fecal_total_counties, County_Code ~ FecalValue)
+summary(county_fc_lm) 
+plot(county_fc_lm)
+anova(county_fc_lm) #no significant P- value (p = 0.2161) for this analysis. No counties are statistically higher than another
+
+```
+
+
+
+```{r}
+##dataset that contains both NWIS and STORET data
+
+#import dataset manually
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+All_fc <- left_join(all_fecal_coliform_data_results , all_fecal_coliform_stations, by= "MonitoringLocationIdentifier")
+is.Date(All_fc$ActivityStartDate)
+
+
+# Set date to date format
+all_fc$ActivityStartDate <-as.Date(all_fc$ActivityStartDate, format = "%m/%d/%y")
+all_fc$ActivityStartDate <-format(all_fc$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+all_fc$ActivityStartDate <-create.early.dates(all_fc$ActivityStartDate)
+all_fc$ActivityStartDate<- as.Date(all_fc$ActivityStartDate, format= "%Y%m%d")
+
+#
+create.early.dates <- (function(d) {
+       paste0(ifelse(d > 191231,"19","20"),d)
+       })
+#
+All_fc$ActivityStartDate <- create.early.dates(All_fc$ActivityStartDate)
+#
+All_fc$ActivityStartDate <- as.Date(All_fc$ActivityStartDate, format = "%m/%d/%y") 
+is.Date(All_fc$ActivityStartDate)
+
+#data-wrangle
+fecal_total <- All_fc %>%
+  select(Date = ActivityStartDate, 
+         County_Code = CountyCode, 
+         FecalValue = ResultMeasureValue)
+view(fecal_total)
+fecal_total$County_Code <-as.factor(fecal_total$County_Code)
+
+All.fc.plot <- ggplot(All_fc, aes(x = County_Code)) +
+  geom_line(aes(y = FecalValue)) +
+  ylim(0, 50000) +
+  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
+  theme(legend.position = "top")
+print(Total.fc.plot)
+
+fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
+
+#check to see if raw data is normally distributed
+qqnorm(fecal_total$FecalValue); qqline(fecal_total$FecalValue) 
+#does have a tail at the end by 4th quartile
+
+# Test for equal variance Bartlett test would not run
+# ANOVA is robust against departures from equal variance.
+
+# Format ANOVA as aov
+all_fc.anova <- aov(data = fecal_total, County_Code ~ FecalValue)
+summary(all_fc.anova)
+#there is a significant p value (P=0.0285)
+
+# Format ANOVA as lm
+all_fc.lm <- lm(data = fecal_total, County_Code ~ FecalValue)
+summary(all_fc.lm)
+#there is a significant difference. P value 0.0285. Meaning there is a relationship between N.C. counties and fecal coliform
+
+# Checking model fit and assumptions
+# ANOVA is robust against departures from normality.
+plot(all_fc.lm)
+
+# Post-hoc test
+summary(aov(FecalValue~as.factor(County_Code), fecal_total))
+TukeyHSD(aov(FecalValue~as.factor(County_Code), fecal_total))
+
+Fecal.Totals.all.plot <- ggplot(fecal_total, aes(x = County_Code, y = FecalValue)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + #45 degree angle of text
+  labs(x = "N.C. County Code", y = "Fecal coliforms (cfu / 100 ml)") +
+  ylim(0, 10000) #might need to reset the y axis limits again
+print(Fecal.Totals.all.plot)
+
+fecalc.kw <- kruskal.test(fecal_total$County_Code ~ fecal_total$FecalValue)
+fecalc.kw #chi-squared statistics = 3716.5, p-valye < 2.2e-16
+```
+
+### Data for Individual Counties
+```{r}
+##Greene County
+#had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
+
+#import Greene count data sets for site infromation and results
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+Greene.processed <- left_join(Green_sample_results, Green_station, by= "MonitoringLocationIdentifier")
+
+# Set date to date format
+Greene.processed$ActivityStartDate <- as.Date(Greene.processed$ActivityStartDate, format ="%m/%d/%Y")
+view(Greene.processed)
+
+#data-wrangling
+Greene_fecal <- Greene.processed%>%
+  select(Date = ActivityStartDate, 
+         Fecal_Coliform_Value = ResultMeasureValue,
+         Units = `ResultMeasure/MeasureUnitCode`,
+         HydrologicCondition = HydrologicCondition)
+#plots
+Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Greene.F.coli.plot)
+
+year.obs <- Greene_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(-Date) %>%
+  summarize_all(funs(sum(!is.na(.))))
+coli.year.summaries <- Greene_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(year, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+coli.years <- ggplot(coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 10000)+
+    labs(y = "Total coliforms (cfu / 100 ml)") 
+print(coli.years)
+
+```
+
+
+```{r parameters}
+
+
+#All E. Coli Parameters (parm_cd from  USGS)
+# 31633,31648,31682,31683,31684,31689,31691,31693, 31750, 31812,31813,31815,31816,31822,31830,31831,31832,31833,31838, 31889, 31896
+
+# 31633,31648,31682,31683,31684,31689,31691,31693,31750,31812,31813,31815,31816,31822,31830,31831,31832,31833,31838,31839,31896, 50275, 50278, 50466, 50467, 50468, 51762, 51763,63156, 84385, 90901, 90902, 99407, 99419, 99596
+# yields 272 sites in N.C.
+
+#   All Fecal Coliform (parm_cd from USGS)
+# 31613, 31615, 31616, 31617, 31619, 31621, 31625, 31685, 31687, 50469, 61215, 84383, 99406, 99418
+# yields 360 sites in N.C.
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
