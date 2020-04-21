@@ -101,25 +101,14 @@ anova(county_fc_lm) #no significant P- value (p = 0.2161) for this analysis. No 
 #import dataset manually
 #join the two datasets together via the "MonitoringLocationIdentifier" column
 All_fc <- left_join(all_fecal_coliform_data_results , all_fecal_coliform_stations, by= "MonitoringLocationIdentifier")
-is.Date(All_fc$ActivityStartDate)
 
-
-# Set date to date format
-all_fc$ActivityStartDate <-as.Date(all_fc$ActivityStartDate, format = "%m/%d/%y")
-all_fc$ActivityStartDate <-format(all_fc$ActivityStartDate, "%y%m%d")
+#reset Date column as a date, include code for dates prior to 1970
+class(All_fc$ActivityStartDate)
+All_fc$ActivityStartDate <-as.Date(All_fc$ActivityStartDate, format= "%m/%d/%y")
+All_fc$ActivityStartDate <-format(All_fc$ActivityStartDate, "%y%m%d")
 create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
-all_fc$ActivityStartDate <-create.early.dates(all_fc$ActivityStartDate)
-all_fc$ActivityStartDate<- as.Date(all_fc$ActivityStartDate, format= "%Y%m%d")
-
-#
-create.early.dates <- (function(d) {
-       paste0(ifelse(d > 191231,"19","20"),d)
-       })
-#
-All_fc$ActivityStartDate <- create.early.dates(All_fc$ActivityStartDate)
-#
-All_fc$ActivityStartDate <- as.Date(All_fc$ActivityStartDate, format = "%m/%d/%y") 
-is.Date(All_fc$ActivityStartDate)
+All_fc$ActivityStartDate <-create.early.dates(All_fc$ActivityStartDate)
+All_fc$ActivityStartDate<- as.Date(All_fc$ActivityStartDate, format= "%Y%m%d")
 
 #data-wrangle
 fecal_total <- All_fc %>%
@@ -127,6 +116,8 @@ fecal_total <- All_fc %>%
          County_Code = CountyCode, 
          FecalValue = ResultMeasureValue)
 view(fecal_total)
+
+#for plotting purposes to not confuse
 fecal_total$County_Code <-as.factor(fecal_total$County_Code)
 
 All.fc.plot <- ggplot(All_fc, aes(x = County_Code)) +
@@ -246,6 +237,10 @@ You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
 plot(pressure)
+
+#```{r , echo=FALSE, fig.cap="Sample locations from 1990 to 2018", out.width = '90%'}
+#knitr::include_graphics("./Output/StudyRegionMap.pdf") -- for knitting a JPEG/PDF/PNG into document
+```
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
