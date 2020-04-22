@@ -129,22 +129,33 @@ print(Total.fc.plot)
 
 fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
 
+# Test for normality. 
+# Note: the important assumption for GLMs is normality of residuals, 
+# not necessarily normality of raw data. See below when we plot the model.
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "55"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "187"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "135"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "87"])
+
 #check to see if raw data is normally distributed
 qqnorm(fecal_total$FecalValue); qqline(fecal_total$FecalValue) 
 #does have a tail at the end by 4th quartile
 
 # Test for equal variance Bartlett test would not run
+bartlett.test(fecal_total$FecalValue ~ fecal_total$County_Code)
+#P value is low and variances are not at all close to each other. 
+
 # ANOVA is robust against departures from equal variance.
 
 # Format ANOVA as aov
-all_fc.anova <- aov(data = fecal_total, County_Code ~ FecalValue)
+all_fc.anova <- aov(data = fecal_total, FecalValue ~ County_Code)
 summary(all_fc.anova)
 #there is a significant p value (P=0.0285)
 
 # Format ANOVA as lm
-all_fc.lm <- lm(data = fecal_total, County_Code ~ FecalValue)
+all_fc.lm <- lm(data = fecal_total, FecalValue ~ County_Code)
 summary(all_fc.lm)
-#there is a significant difference. P value 0.0285. Meaning there is a relationship between N.C. counties and fecal coliform
+#there is a significant difference. P value 2.2e-16. Meaning there is a relationship between N.C. counties and fecal coliform
 
 # Checking model fit and assumptions
 # ANOVA is robust against departures from normality.
