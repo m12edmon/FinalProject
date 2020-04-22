@@ -12,6 +12,7 @@ library(cowplot)
 library(lubridate)
 library(readr)
 library(dplyr)
+library(agricolae)
 ```
 
 ## R Markdown
@@ -81,15 +82,15 @@ print(Total.fc.plot)
 fecal_total_counties$County <-as.numeric(fecal_total_counties$County_Code)
 
 # Format ANOVA as aov
-county_fc.anova <- aov(data = fecal_total_counties, County_Code ~ FecalValue)
+county_fc.anova <- aov(data = fecal_total_counties, FecalValue ~ County_Code)
 summary(county_fc.anova)
 #not statistically significant P value 0.216, and no effect was observed
 
 # Format ANOVA as lm
-county_fc_lm <- lm(data = fecal_total_counties, County_Code ~ FecalValue)
+county_fc_lm <- lm(data = fecal_total_counties, FecalValue ~ County_Code)
 summary(county_fc_lm) 
 plot(county_fc_lm)
-anova(county_fc_lm) #no significant P- value (p = 0.2161) for this analysis. No counties are statistically higher than another
+anova(county_fc_lm) #no significant P- value (p = 1) for this analysis. No counties are statistically higher than another
 
 ```
 
@@ -133,8 +134,6 @@ fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
 # Note: the important assumption for GLMs is normality of residuals, 
 # not necessarily normality of raw data. See below when we plot the model.
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "55"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "187"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "135"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "87"])
 
 #check to see if raw data is normally distributed
@@ -162,8 +161,9 @@ summary(all_fc.lm)
 plot(all_fc.lm)
 
 # Post-hoc test
-summary(aov(FecalValue~as.factor(County_Code), fecal_total))
-TukeyHSD(aov(FecalValue~as.factor(County_Code), fecal_total))
+TukeyHSD(all_fc.anova) 
+#summary(aov(FecalValue~as.factor(County_Code), fecal_total))
+#TukeyHSD(aov(FecalValue~as.factor(County_Code), fecal_total))
 
 Fecal.Totals.all.plot <- ggplot(fecal_total, aes(x = County_Code, y = FecalValue)) +
   geom_boxplot() +
