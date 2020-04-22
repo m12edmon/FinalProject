@@ -261,7 +261,78 @@ print(Greene.coli.seasons)
 
 
 ```{r, Pitt County}
+##Pitt County
+#had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
 
+#import Pitt count data sets for site infromation and results
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+Pitt.processed <- left_join(Pitt_biologicalresults, Pitt_station, by= "MonitoringLocationIdentifier")
+
+# Set date to date format
+Pitt.processed$ActivityStartDate <- as.Date(Pitt.processed$ActivityStartDate, format ="%m/%d/%y")
+Pitt.processed$ActivityStartDate <-format(Pitt.processed$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+Pitt.processed$ActivityStartDate <-create.early.dates(Pitt.processed$ActivityStartDate)
+Pitt.processed$ActivityStartDate<- as.Date(Pitt.processed$ActivityStartDate, format= "%Y%m%d")
+
+#data-wrangling
+Pitt_fecal <- Pitt.processed%>%
+  select(Date = ActivityStartDate, 
+         Fecal_Coliform_Value = ResultMeasureValue,
+         Units = `ResultMeasure/MeasureUnitCode`,
+         HydrologicCondition = HydrologicCondition)
+#plots
+Pitt.F.coli.plot <- ggplot(Pitt_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Pitt.F.coli.plot)
+
+#yearly changes in data
+Pitt.year.obs <- Pitt_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(-Date) 
+
+Pitt.coli.year.summaries <- Pitt_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(year, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Pitt.coli.years <- ggplot(Pitt.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 1100)+
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Pitt.coli.years)
+
+# monthly changes in data
+Pitt.monthly.obs <- Pitt_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(-Date)
+  
+Pitt.coli.monthly.summaries <- Pitt_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(month, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Pitt.coli.seasons <- ggplot(Pitt.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Pitt.coli.seasons)
 
 
 ```
