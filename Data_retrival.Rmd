@@ -337,6 +337,83 @@ print(Pitt.coli.seasons)
 
 ```
 
+```{r, Duplin County}
+##Duplin County
+
+#import Duplin count data sets for site infromation and results
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+Duplin.processed <- left_join(Duplin_results, duplin_station, by= "MonitoringLocationIdentifier")
+
+# Set date to date format
+Duplin.processed$ActivityStartDate <- as.Date(Duplin.processed$ActivityStartDate, format ="%m/%d/%y")
+Duplin.processed$ActivityStartDate <-format(Duplin.processed$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+Duplin.processed$ActivityStartDate <-create.early.dates(Duplin.processed$ActivityStartDate)
+Duplin.processed$ActivityStartDate <- as.Date(Duplin.processed$ActivityStartDate, format= "%Y%m%d")
+
+#data-wrangling
+Duplin_fecal <- Duplin.processed%>%
+  select(Date = ActivityStartDate, 
+         Fecal_Coliform_Value = ResultMeasureValue,
+         Units = `ResultMeasure/MeasureUnitCode`,
+         HydrologicCondition = HydrologicEvent) #No recorded Hydroloic event
+#plots
+Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Duplin.F.coli.plot)
+
+#yearly changes in data
+Duplin.year.obs <- Duplin_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(-Date) 
+
+Duplin.coli.year.summaries <- Duplin_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(year, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 900)+
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Duplin.coli.years)
+
+# monthly changes in data
+Duplin.monthly.obs <- Duplin_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(-Date)
+  
+Duplin.coli.monthly.summaries <- Duplin_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(month, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Duplin.coli.seasons <- ggplot(Duplin.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Duplin.coli.seasons)
+
+```
+
+
+
 ## Including Plots
 
 You can also embed plots, for example:
