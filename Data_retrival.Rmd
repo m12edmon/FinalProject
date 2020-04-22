@@ -412,6 +412,80 @@ print(Duplin.coli.seasons)
 
 ```
 
+```{r, Lenoir County}
+##Lenoir County
+
+#import Lenoir count data sets for site infromation and results
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+Lenoir.processed <- left_join(leNoir_results, lenoir_station, by= "MonitoringLocationIdentifier")
+
+# Set date to date format
+Lenoir.processed$ActivityStartDate <- as.Date(Lenoir.processed$ActivityStartDate, format ="%m/%d/%y")
+Lenoir.processed$ActivityStartDate <-format(Lenoir.processed$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+Lenoir.processed$ActivityStartDate <-create.early.dates(Lenoir.processed$ActivityStartDate)
+Lenoir.processed$ActivityStartDate <- as.Date(Lenoir.processed$ActivityStartDate, format= "%Y%m%d")
+
+#data-wrangling
+Lenoir_fecal <- Lenoir.processed%>%
+  select(Date = ActivityStartDate, 
+         Fecal_Coliform_Value = ResultMeasureValue,
+         Units = `ResultMeasure/MeasureUnitCode`,
+         HydrologicCondition = HydrologicCondition) 
+
+#plots
+Lenoir.F.coli.plot <- ggplot(Lenoir_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Lenoir.F.coli.plot)
+
+#yearly changes in data
+Lenoir.year.obs <- Lenoir_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(-Date) 
+
+Lenoir.coli.year.summaries <- Lenoir_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(year, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Lenoir.coli.years <- ggplot(Lenoir.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 1600)+
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Lenoir.coli.years)
+
+# monthly changes in data
+Lenoir.monthly.obs <- Lenoir_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(-Date)
+  
+Lenoir.coli.monthly.summaries <- Lenoir_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(month, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Lenoir.coli.seasons)
+```
 
 
 ## Including Plots
