@@ -487,6 +487,80 @@ Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
 print(Lenoir.coli.seasons)
 ```
 
+```{r, Sampson}
+##Sampson County
+
+#import Sampson count data sets for site infromation and results
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+Sampson.processed <- left_join(sampson_results, sampson_station, by= "MonitoringLocationIdentifier")
+
+# Set date to date format
+Sampson.processed$ActivityStartDate <- as.Date(Sampson.processed$ActivityStartDate, format ="%m/%d/%y")
+Sampson.processed$ActivityStartDate <-format(Sampson.processed$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+Sampson.processed$ActivityStartDate <-create.early.dates(Sampson.processed$ActivityStartDate)
+Sampson.processed$ActivityStartDate <- as.Date(Sampson.processed$ActivityStartDate, format= "%Y%m%d")
+
+#data-wrangling
+Sampson_fecal <- Sampson.processed%>%
+  select(Date = ActivityStartDate, 
+         Fecal_Coliform_Value = ResultMeasureValue,
+         Units = `ResultMeasure/MeasureUnitCode`) 
+
+#plots
+Sampson.F.coli.plot <- ggplot(Sampson_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Sampson.F.coli.plot)
+
+#yearly changes in data
+Sampson.year.obs <- Sampson_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(-Date) 
+
+Sampson.coli.year.summaries <- Sampson_fecal %>%
+  mutate(year = year(Date)) %>%
+  group_by(year) %>%
+  select(year, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Sampson.coli.years <- ggplot(Sampson.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 1200)+
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Sampson.coli.years)
+
+# monthly changes in data
+Sampson.monthly.obs <- Sampson_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(-Date)
+  
+Sampson.coli.monthly.summaries <- Sampson_fecal %>%
+  mutate(month = month(Date)) %>%
+  group_by(month) %>%
+  select(month, Fecal_Coliform_Value) %>%
+  summarize_all(funs(Median = median(., na.rm = T),
+                 quant25 = quantile(., .25, na.rm = T),
+                 quant75 = quantile(., .75, na.rm = T)))
+
+Sampson.coli.seasons <- ggplot(Sampson.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+print(Sampson.coli.seasons)
+```
+
 
 ## Including Plots
 
