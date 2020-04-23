@@ -68,7 +68,16 @@ view(fecal_total_counties)
 fecal_total_counties$County_Code <-as.factor(fecal_total_counties$County_Code)
 #notes: Date=ActivityStateDate returned NA values, column is Date factor
 
-Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code)) +
+Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, y= FecalValue, color = County_Code)) +
+  geom_point() +
+  ylim(0, 50000) +
+  scale_color_viridis_c(end =0.8, option = "magma" )+
+  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)", color = "N.C. Counties") +
+  theme(legend.position = "top")
+print(Total.fc.plot)
+
+
+Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, color = County_Code)) +
   geom_line(aes(y = FecalValue)) +
   ylim(0, 50000) +
   labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
