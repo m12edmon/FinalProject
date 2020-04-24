@@ -754,6 +754,8 @@ Wayne.coli.seasons <- ggplot(Wayne.coli.monthly.summaries, aes(x = month)) +
   theme(plot.title = element_text(hjust = 0.5))+
     labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Wayne.coli.seasons)
+
+#stat analysi
 ```
 
 ```{r, combination plots of Case Studies}

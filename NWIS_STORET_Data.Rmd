@@ -266,14 +266,14 @@ fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
   na.omit()
 
 #Exploratory exceedance graph
-#fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
- # geom_point() +
- # scale_color_viridis_d()+
-#  ylim(200, 50000)+
-#  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-#  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
-#  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
-#print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
+fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+ geom_point() +
+ scale_color_viridis_d()+
+ylim(0, 50000)+
+labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+ theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
 ```
 
 
