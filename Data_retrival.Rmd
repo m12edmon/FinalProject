@@ -21,19 +21,6 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 ```{r}
-#import all NC counties with fecal coliform samples_NWIS parameter specific
-NC_County_Raw <-read_csv("./NC_County_FC_station_all.csv")
-results_all_NC_counties_fc <- read_csv("./results_all_NC_counties_fc.csv")
-
-#join the two datasets together via the "MonitoringLocationIdentifier" column
-All_county_fc <- left_join(NC_County_Raw , results_all_NC_counties_fc, by= "MonitoringLocationIdentifier")
-summary(All_county_fc)
-head(All_county_fc$ActivityStartDate)
-is.Date(All_county_fc$ActivityStartDate)
-
-# Set date to date format
-All_county_fc$ActivityStartDate <- as.Date(All_county_fc$ActivityStartDate, format ="%m/%d/%y")
-is.Date(All_county_fc$ActivityStartDate)
 
 # Set theme
 mytheme <- theme_classic(base_size = 14) +
@@ -57,95 +44,6 @@ parameter code was used extensively in the past.
 ### One-Way ANOVA test
 
 Does fecal coliform data differ among counties in N.C.?
-```{r}
-#Data that contains only NWIS fecal coliform data
-#one-way ANOVA of county fecal coliform data
-
-###data wrangle
-fecal_total_counties <- All_county_fc %>%
-  select(Date = ActivityStartDate, 
-         County_Code = CountyCode, 
-         FecalValue = ResultMeasureValue)
-view(fecal_total_counties)
-fecal_total_counties$County_Code <-as.factor(fecal_total_counties$County_Code)
-#notes: Date=ActivityStateDate returned NA values, column is Date factor
-
-Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, y= FecalValue, color = County_Code)) +
-  geom_point() +
-  ylim(0, 15000) +
-  labs(x = "N.C. County",  y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-  theme(legend.position = "right")
-print(Total.fc.plot + ggtitle("Fecal Coliform Concentrations by County"))
-
-Total.fc.color.plot <- ggplot(fecal_total_counties, aes(x=County_Code, y=FecalValue, color = County_Code))+
-  geom_line()+
-  scale_color_viridis_d()+
-  ylim(0, 15000) +
-  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-  theme(legend.position = "right")
-print(Total.fc.color.plot + ggtitle("Fecal Coliform Concentrations by County"))
-
-
-Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, color = County_Code)) +
-  geom_line(aes(y = FecalValue)) +
-  ylim(0, 50000) +
-  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
-  theme(legend.position = "right")
-print(Total.fc.plot)
-
-
-Exceeding.Limits.fc.<- fecal_total_counties %>%
-  filter(FecalValue > 200)
-
-
-Exceeding.Limits.fc.<- ggplot(fecal_total_counties, aes(x = County_Code, color = County_Code)) +
-  geom_line(aes(y = FecalValue)) +
-  ylim(200, 50000) +
-  scale_fill_viridis_d( option = "plasma", begin = 0.5, end = 0, alpha = 0.8)+
-  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
-  theme(legend.position = "right")
-print(Total.fc.plot)
-
-#exploratory bar graph
-ggplot(fecal_total_counties, aes(x =County_Code)) +
-  geom_bar() 
-
-#exploratory box plot
-ggplot(fecal_total_counties) +
-  geom_boxplot(aes(x = County_Code, y = FecalValue))+
-  ylim(0, 10000)
-
-#exploratory scatter plot
-ggplot(fecal_total_counties) +
-  geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
-  ylim(0, 10000)+
-  labs(theme(legend.position = "right"))
-
-ggplot(fecal_total_counties) +
-  geom_line(aes(x = Date, y = FecalValue))+
-  ylim(0, 10000)
-
-              
-#from the plot we can see all the N.C. Counties with fecal coliform data above 10,000 cfu/100ml
-# 11 counties with 10,000 or higher concentrations of fecal coliform is surface waters
-#mecklendburg county 119, madison county 115, harnett county 85, Green county 79, Duplin County 61, Davie County 59, Buncombe County 21, Durham County 63, Stanley county 167, Pitt county 147, no name county 109
-#highest values are counties 79, 119, 115, 147, 85,59
-
-fecal_total_counties$County <-as.numeric(fecal_total_counties$County_Code)
-
-# Format ANOVA as aov
-county_fc.anova <- aov(data = fecal_total_counties, FecalValue ~ County_Code)
-summary(county_fc.anova)
-#not statistically significant P value 0.216, and no effect was observed
-
-# Format ANOVA as lm
-county_fc_lm <- lm(data = fecal_total_counties, FecalValue ~ County_Code)
-summary(county_fc_lm) 
-plot(county_fc_lm)
-anova(county_fc_lm) #no significant P- value (p = 1) for this analysis. No counties are statistically higher than another
-
-```
-
 
 
 ```{r}
@@ -460,7 +358,6 @@ Pitt_fc.anova <- aov(data = Pitt_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Pitt_fc.anova)
 #sig df= 99, F value = 2.615 p <0.001
 
-options(max.print=999999)
 Pitt_fc.lm <- lm(data = Pitt_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Pitt_fc.lm)
 
@@ -474,7 +371,6 @@ Duplin_fc.anova <- aov(data = Duplin_fecal, Fecal_Coliform_Value ~ as.factor(Dat
 summary(Pitt_fc.anova)
 #sig df= 99, F value = 2.615 p <0.001
 
-options(max.print=999999)
 Duplin_fc.lm <- lm(data = Duplin_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Pitt_fc.lm)
 ```
@@ -484,7 +380,7 @@ lenoir_fc.anova <- aov(data = Lenoir_fecal, Fecal_Coliform_Value ~ as.factor(Dat
 summary(lenoir_fc.anova)
 #sig df= 99, F value = 3.059 p <0.001
 
-options(max.print=999999)
+
 Lenoir_fc.lm <- lm(data = Lenoir_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Lenoir_fc.lm)
 #Multiple R-squared:  0.7389,	Adjusted R-squared:  0.4974 
@@ -495,7 +391,7 @@ summary(Lenoir_fc.lm)
 Sampson_fc.anova <- aov(data = Sampson_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Sampson_fc.anova)
 #sig df= 866, F value = 99.3 p <0.001
-options(max.print=999999)
+
 Sampson_fc.lm <- lm(data = Sampson_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Sampson_fc.lm)
 #Multiple R-squared:  0.9778,	Adjusted R-squared:  0.968 
@@ -507,7 +403,7 @@ summary(Sampson_fc.lm)
 Wayne_fc.anova <- aov(data = Wayne_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Wayne_fc.anova)
 #sig df= 754, F value = 1.856 p <0.001
-options(max.print=999999)
+
 Wayne_fc.lm <- lm(data = Wayne_fecal, Fecal_Coliform_Value ~ as.factor(Date))
 summary(Wayne_fc.lm)
 ```

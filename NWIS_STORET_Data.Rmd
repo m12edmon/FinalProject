@@ -1,6 +1,8 @@
 ---
 title: "NWIS_STORET_Data"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +22,7 @@ mytheme <- theme_classic(base_size = 14) +
   theme(axis.text = element_text(color = "black"), 
         legend.position = "right")
 theme_set(mytheme)
+
 ```
 
 ## R Markdown
@@ -108,15 +111,11 @@ shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "87"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "1"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "3"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "5"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "7"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "9"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "11"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "15"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "21"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "23"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "25"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "27"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "29"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "31"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "33"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "35"])
@@ -148,54 +147,48 @@ shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "93"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "95"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "97"])
 shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "99"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "101"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "103"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "105"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "107"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "109"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "111"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "113"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "115"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "117"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "121"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "123"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "125"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "127"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "129"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "131"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "133"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "135"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "137"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "139"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "141"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "143"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "145"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "147"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "149"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "151"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "153"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "155"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "157"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "159"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "161"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "163"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "165"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "167"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "169"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "171"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "173"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "175"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "177"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "179"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "181"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "185"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "187"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "189"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "191"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "193"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "195"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "197"])
-shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "199"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "113"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "115"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "117"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "121"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "123"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "125"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "127"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "129"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "131"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "133"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "135"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "137"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "139"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "141"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "143"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "145"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "147"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "149"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "151"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "153"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "155"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "157"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "159"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "161"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "163"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "165"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "167"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "169"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "171"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "173"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "175"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "177"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "179"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "181"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "185"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "187"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "189"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "191"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "193"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "195"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "197"])
+#shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "199"])
 
 #check to see if raw data is normally distributed
 qqnorm(fecal_total$FecalValue); qqline(fecal_total$FecalValue) 
@@ -253,6 +246,7 @@ fecalc.kw #chi-squared statistics = 33796, p-valye < 2.2e-16
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Fecal Coliform Concentrations in Surface Waters by County"}
 
+
 Figure_2 <- ggplot(fecal_total_processed, aes(x=County_Code, y=FecalValue, color = County_Code))+
   geom_line()+
   scale_color_viridis_d()+
@@ -272,15 +266,14 @@ fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
   na.omit()
 
 #Exploratory exceedance graph
-fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
-  geom_point() +
-  scale_color_viridis_d()+
-  scale_y_continuous(breaks = seq(200, 5000, by = 5000))+
-  ylim(200, 50000)+
-  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
-  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
-print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
+#fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+ # geom_point() +
+ # scale_color_viridis_d()+
+#  ylim(200, 50000)+
+#  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+#  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+#  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+#print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
 ```
 
 
@@ -319,6 +312,7 @@ print(explore.scatter.county + ggtitle("Exploratory Scatter Plot"))
 ```
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Concentrations from 1970-2018"}
+
 explore.scatter.date <-  ggplot(fecal_total) +
   geom_line(aes(x = Date, y = FecalValue))+
   ylim(0, 50000)+
@@ -359,6 +353,7 @@ Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
 ```
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Greene County, N.C."}
+
 Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -421,7 +416,7 @@ Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
 print(Duplin.F.coli.plot)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap=Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C. from 1970- 2018"}
 
 Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
@@ -489,7 +484,7 @@ print(Lenoir.coli.seasons)
 
 
 ##Exploratory Plots Case Study- Sampson
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C."}}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C."}
 Sampson.F.coli.plot <- ggplot(Sampson_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
