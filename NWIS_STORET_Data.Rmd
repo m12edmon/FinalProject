@@ -4,8 +4,8 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+
 getwd()
-#install.packages("dataRetrieval")
 library(dataRetrieval)
 library(tidyverse)
 library(cowplot)
@@ -94,6 +94,158 @@ view(fecal_total)
 
 fecal_total$County_Code <-as.factor(fecal_total$County_Code)
 fecal_total_processed$County_Code <-as.factor(fecal_total_processed$County_Code)
+```
+
+##Statistical Anlaysis of N.C. Counties and Fecal Coliform Concentrations
+```{r}
+fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
+
+# Test for normality. 
+# Note: the important assumption for GLMs is normality of residuals, 
+# not necessarily normality of raw data. See below when we plot the model.
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "55"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "87"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "1"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "3"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "5"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "7"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "9"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "11"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "15"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "21"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "23"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "25"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "27"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "29"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "31"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "33"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "35"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "39"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "41"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "43"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "45"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "47"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "51"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "53"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "55"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "59"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "61"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "63"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "65"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "67"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "69"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "71"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "73"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "75"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "79"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "81"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "83"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "85"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "87"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "89"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "91"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "93"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "95"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "97"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "99"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "101"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "103"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "105"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "107"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "109"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "111"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "113"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "115"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "117"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "121"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "123"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "125"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "127"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "129"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "131"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "133"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "135"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "137"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "139"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "141"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "143"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "145"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "147"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "149"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "151"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "153"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "155"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "157"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "159"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "161"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "163"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "165"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "167"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "169"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "171"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "173"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "175"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "177"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "179"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "181"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "185"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "187"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "189"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "191"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "193"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "195"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "197"])
+shapiro.test(fecal_total$FecalValue[fecal_total$County_Code == "199"])
+
+#check to see if raw data is normally distributed
+qqnorm(fecal_total$FecalValue); qqline(fecal_total$FecalValue) 
+#does have a tail at the end by 4th quartile
+
+# Test for equal variance Bartlett test would not run
+bartlett.test(fecal_total$FecalValue ~ fecal_total$County_Code)
+#P value is low and variances are not at all close to each other. 
+```
+#One-Way ANOVA test
+```{r}
+# ANOVA is robust against departures from equal variance.
+
+# Format ANOVA as aov
+all_fc.anova <- aov(data = fecal_total, FecalValue ~ County_Code)
+summary(all_fc.anova)
+#there is a significant p value (P < 0.001)
+
+fligner.test(fecal_total$FecalValue ~ fecal_total$County_Code)
+
+#The Fligner-Killeen test of homogeneity of variances says that the variance across groups is not homogeneous, but with a p-value close to 0.05 (med chi-squared = 44111, p-value = 0.001 < 0.05). For this reason, for testing if there are significant dierences between the fecal coliform concentrations among N.C. counties, it is used a One-way ANOVA test and a Non-parametric equivalent of ANOVA, the Kruskal-Wallis Test.
+
+all_fc.lm <- lm(data = fecal_total, FecalValue ~ County_Code)
+summary(all_fc.lm)
+#residual standard error: 149800 on 218233 degrees of freedom (18657 observations deleted due to missingness) Multiple R-squared:  0.002449,	Adjusted R-squared:  0.001996 F-statistic: 5.411 on 99 and 218233 DF,  p-value: < 2.2e-16
+#shows that county 193, 153, 119, 117, 71, 67, 57, 7, are all signficantly different 
+
+# ANOVA is robust against departures from normality.
+plot(all_fc.lm)
+
+#According to both test, there is a significant difference between the fecal coliform concentrations for the different counties in N.C. (ANOVA; F = 5.41, df = 99, p< 2.2e-16) and (Kruskal-Wallis chi-squared = 471.69, df = 2, p-value < 2.2e-16)
+
+#To analyze which counties are different, two post hoc tests were used, a Tukey multiple comparisons of means test for ANOVA and a Dunn’s test for Kruskal-Wallis.
+
+summary(aov(FecalValue~as.factor(County_Code), fecal_total))
+TukeyHSD(aov(FecalValue~as.factor(County_Code), fecal_total))
+
+Fecal.Totals.all.plot <- ggplot(fecal_total, aes(x = County_Code, y = FecalValue, color = County_Code)) +
+  geom_boxplot() +
+  scale_color_viridis_d()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "N.C. County Code", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) +
+  ylim(0, 1000)+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+print(Fecal.Totals.all.plot)
+
+fecalc.kw <- kruskal.test(fecal_total$FecalValue ~ fecal_total$County_Code)
+fecalc.kw #chi-squared statistics = 33796, p-valye < 2.2e-16
+
 ```
 
 
