@@ -13,7 +13,6 @@ library(lubridate)
 library(viridis)
 library(readr)
 library(dplyr)
-library(agricolae)
 ```
 
 ## R Markdown
@@ -22,7 +21,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 ```{r}
-#manually import all NC counties with fecal coliform samples
+#import all NC counties with fecal coliform samples_NWIS parameter specific
 NC_County_Raw <-read_csv("./NC_County_FC_station_all.csv")
 results_all_NC_counties_fc <- read_csv("./results_all_NC_counties_fc.csv")
 
@@ -39,7 +38,7 @@ is.Date(All_county_fc$ActivityStartDate)
 # Set theme
 mytheme <- theme_classic(base_size = 14) +
   theme(axis.text = element_text(color = "black"), 
-        legend.position = "top")
+        legend.position = "right")
 theme_set(mytheme)
 
 ```
@@ -71,13 +70,20 @@ view(fecal_total_counties)
 fecal_total_counties$County_Code <-as.factor(fecal_total_counties$County_Code)
 #notes: Date=ActivityStateDate returned NA values, column is Date factor
 
-Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, y= FecalValue)) +
+Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, y= FecalValue, color = County_Code)) +
   geom_point() +
-  ylim(0, 50000) +
-  scale_color_viridis_c(end =0.8, option = "magma" )+
-  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
-  theme(legend.position = "top")
-print(Total.fc.plot)
+  ylim(0, 15000) +
+  labs(x = "N.C. County",  y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "right")
+print(Total.fc.plot + ggtitle("Fecal Coliform Concentrations by County"))
+
+Total.fc.color.plot <- ggplot(fecal_total_counties, aes(x=County_Code, y=FecalValue, color = County_Code))+
+  geom_line()+
+  scale_color_viridis_d()+
+  ylim(0, 15000) +
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "right")
+print(Total.fc.color.plot + ggtitle("Fecal Coliform Concentrations by County"))
 
 
 Total.fc.plot <- ggplot(fecal_total_counties, aes(x = County_Code, color = County_Code)) +
@@ -90,11 +96,12 @@ print(Total.fc.plot)
 
 Exceeding.Limits.fc.<- fecal_total_counties %>%
   filter(FecalValue > 200)
-dim(Exceeding.Limits.fc.)
+
 
 Exceeding.Limits.fc.<- ggplot(fecal_total_counties, aes(x = County_Code, color = County_Code)) +
   geom_line(aes(y = FecalValue)) +
   ylim(200, 50000) +
+  scale_fill_viridis_d( option = "plasma", begin = 0.5, end = 0, alpha = 0.8)+
   labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
   theme(legend.position = "right")
 print(Total.fc.plot)
@@ -115,8 +122,9 @@ ggplot(fecal_total_counties) +
   labs(theme(legend.position = "right"))
 
 ggplot(fecal_total_counties) +
-  geom_point(aes(x = Date, y = FecalValue))+
+  geom_line(aes(x = Date, y = FecalValue))+
   ylim(0, 10000)
+
               
 #from the plot we can see all the N.C. Counties with fecal coliform data above 10,000 cfu/100ml
 # 11 counties with 10,000 or higher concentrations of fecal coliform is surface waters
@@ -165,15 +173,26 @@ fecal_total <- All_fc %>%
          FecalValue = ResultMeasureValue)
 view(fecal_total)
 
+fecal_total$County_Code <- as.factor(fecal_total$County_Code)
+
+fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
+  na.omit()
+
+fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+  geom_line() +
+  labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
+  theme(legend.position = "top")
+print(fecal_exceed.plot)
+
 #for plotting purposes to not confuse
 fecal_total$County_Code <-as.factor(fecal_total$County_Code)
 
-All.fc.plot <- ggplot(All_fc, aes(x = County_Code)) +
-  geom_line(aes(y = FecalValue)) +
+All.fc.plot <- ggplot(All_fc, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+  geom_line() +
   ylim(0, 50000) +
   labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
   theme(legend.position = "top")
-print(Total.fc.plot)
+print(All.fc.plot)
 
 
 #exploratory bar graph
@@ -255,6 +274,9 @@ fecalc.kw #chi-squared statistics = 33768, p-valye < 2.2e-16
 #had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
 
 #import Greene count data sets for site infromation and results
+Green_sample_results <-read_csv("./Green_sample_results.csv")
+Green_station <-read_csv("./Green_station.csv")
+
 #join the two datasets together via the "MonitoringLocationIdentifier" column
 Greene.processed <- left_join(Green_sample_results, Green_station, by= "MonitoringLocationIdentifier")
 
@@ -265,12 +287,16 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Greene.processed$ActivityStartDate <-create.early.dates(Greene.processed$ActivityStartDate)
 Greene.processed$ActivityStartDate<- as.Date(Greene.processed$ActivityStartDate, format= "%Y%m%d")
 
+Greene.processed.dates<- Greene.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Greene_fecal <- Greene.processed%>%
+Greene_fecal <- Greene.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
          Units = `ResultMeasure/MeasureUnitCode`,
-         HydrologicCondition = HydrologicCondition)
+         )
 #plots
 Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
@@ -296,10 +322,13 @@ Greene.coli.year.summaries <- Greene_fecal %>%
 Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Greene County")+
+  theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 2000)+
-    labs(y = "Total coliforms (cfu / 100 ml)") 
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Greene.coli.years)
 
 # monthly changes in data
@@ -319,9 +348,12 @@ Greene.coli.monthly.summaries <- Greene_fecal %>%
 Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+  ggtitle("Greene County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Greene.coli.seasons)
 
 ```
@@ -332,6 +364,7 @@ print(Greene.coli.seasons)
 #had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
 
 #import Pitt count data sets for site infromation and results
+
 #join the two datasets together via the "MonitoringLocationIdentifier" column
 Pitt.processed <- left_join(Pitt_biologicalresults, Pitt_station, by= "MonitoringLocationIdentifier")
 
@@ -342,12 +375,16 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Pitt.processed$ActivityStartDate <-create.early.dates(Pitt.processed$ActivityStartDate)
 Pitt.processed$ActivityStartDate<- as.Date(Pitt.processed$ActivityStartDate, format= "%Y%m%d")
 
+Pitt.processed.dates<- Pitt.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Pitt_fecal <- Pitt.processed%>%
+Pitt_fecal <- Pitt.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
-         Units = `ResultMeasure/MeasureUnitCode`,
-         HydrologicCondition = HydrologicCondition)
+         Units = `ResultMeasure/MeasureUnitCode`)
+
 #plots
 Pitt.F.coli.plot <- ggplot(Pitt_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
@@ -373,10 +410,13 @@ Pitt.coli.year.summaries <- Pitt_fecal %>%
 Pitt.coli.years <- ggplot(Pitt.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Pitt County")+
+  theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 1100)+
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Pitt.coli.years)
 
 # monthly changes in data
@@ -396,9 +436,12 @@ Pitt.coli.monthly.summaries <- Pitt_fecal %>%
 Pitt.coli.seasons <- ggplot(Pitt.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+    ggtitle("Pitt County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Pitt.coli.seasons)
 
 
@@ -408,8 +451,11 @@ print(Pitt.coli.seasons)
 ##Duplin County
 
 #import Duplin count data sets for site infromation and results
+Duplin_sample_results <-read_csv("./Duplin_results.csv")
+Duplin_station <-read_csv("./duplin_station.csv")
+
 #join the two datasets together via the "MonitoringLocationIdentifier" column
-Duplin.processed <- left_join(Duplin_results, duplin_station, by= "MonitoringLocationIdentifier")
+Duplin.processed <- left_join(Duplin_sample_results, Duplin_station, by= "MonitoringLocationIdentifier")
 
 # Set date to date format
 Duplin.processed$ActivityStartDate <- as.Date(Duplin.processed$ActivityStartDate, format ="%m/%d/%y")
@@ -418,13 +464,16 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Duplin.processed$ActivityStartDate <-create.early.dates(Duplin.processed$ActivityStartDate)
 Duplin.processed$ActivityStartDate <- as.Date(Duplin.processed$ActivityStartDate, format= "%Y%m%d")
 
+Duplin.processed.dates<- Duplin.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Duplin_fecal <- Duplin.processed%>%
+Duplin_fecal <- Duplin.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
-         Units = `ResultMeasure/MeasureUnitCode`,
-         HydrologicCondition = HydrologicEvent) #No recorded Hydroloic event
-#plots
+         Units = `ResultMeasure/MeasureUnitCode`)
+
 Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -449,10 +498,13 @@ Duplin.coli.year.summaries <- Duplin_fecal %>%
 Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Duplin County")+
+  theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 900)+
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Duplin.coli.years)
 
 # monthly changes in data
@@ -472,9 +524,12 @@ Duplin.coli.monthly.summaries <- Duplin_fecal %>%
 Duplin.coli.seasons <- ggplot(Duplin.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+  ggtitle("Duplin County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Duplin.coli.seasons)
 
 ```
@@ -483,8 +538,11 @@ print(Duplin.coli.seasons)
 ##Lenoir County
 
 #import Lenoir count data sets for site infromation and results
+Lenoir_results <-read_csv("./LeNoir_results.csv")
+Lenoir_station <-read_csv("./lenoir_station.csv")
+
 #join the two datasets together via the "MonitoringLocationIdentifier" column
-Lenoir.processed <- left_join(leNoir_results, lenoir_station, by= "MonitoringLocationIdentifier")
+Lenoir.processed <- left_join(Lenoir_results, Lenoir_station, by= "MonitoringLocationIdentifier")
 
 # Set date to date format
 Lenoir.processed$ActivityStartDate <- as.Date(Lenoir.processed$ActivityStartDate, format ="%m/%d/%y")
@@ -493,12 +551,15 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Lenoir.processed$ActivityStartDate <-create.early.dates(Lenoir.processed$ActivityStartDate)
 Lenoir.processed$ActivityStartDate <- as.Date(Lenoir.processed$ActivityStartDate, format= "%Y%m%d")
 
+Lenoir.processed.dates<- Lenoir.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Lenoir_fecal <- Lenoir.processed%>%
+Lenoir_fecal <- Lenoir.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
-         Units = `ResultMeasure/MeasureUnitCode`,
-         HydrologicCondition = HydrologicCondition) 
+         Units = `ResultMeasure/MeasureUnitCode`) 
 
 #plots
 Lenoir.F.coli.plot <- ggplot(Lenoir_fecal, aes(x = Date)) +
@@ -525,10 +586,13 @@ Lenoir.coli.year.summaries <- Lenoir_fecal %>%
 Lenoir.coli.years <- ggplot(Lenoir.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Lenoir County")+
+  theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 1600)+
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Lenoir.coli.years)
 
 # monthly changes in data
@@ -548,9 +612,12 @@ Lenoir.coli.monthly.summaries <- Lenoir_fecal %>%
 Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+   ggtitle("Lenoir County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Lenoir.coli.seasons)
 ```
 
@@ -558,8 +625,11 @@ print(Lenoir.coli.seasons)
 ##Sampson County
 
 #import Sampson count data sets for site infromation and results
+Sampson_results <-read_csv("./Sampson_results.csv")
+Sampson_station <-read_csv("./Sampson_station.csv")
+
 #join the two datasets together via the "MonitoringLocationIdentifier" column
-Sampson.processed <- left_join(sampson_results, sampson_station, by= "MonitoringLocationIdentifier")
+Sampson.processed <- left_join(Sampson_results, Sampson_station, by= "MonitoringLocationIdentifier")
 
 # Set date to date format
 Sampson.processed$ActivityStartDate <- as.Date(Sampson.processed$ActivityStartDate, format ="%m/%d/%y")
@@ -568,8 +638,12 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Sampson.processed$ActivityStartDate <-create.early.dates(Sampson.processed$ActivityStartDate)
 Sampson.processed$ActivityStartDate <- as.Date(Sampson.processed$ActivityStartDate, format= "%Y%m%d")
 
+Sampson.processed.dates<- Sampson.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Sampson_fecal <- Sampson.processed%>%
+Sampson_fecal <- Sampson.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
          Units = `ResultMeasure/MeasureUnitCode`) 
@@ -599,10 +673,13 @@ Sampson.coli.year.summaries <- Sampson_fecal %>%
 Sampson.coli.years <- ggplot(Sampson.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
   ylim(0, 1200)+
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+  ggtitle("Sampson County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Sampson.coli.years)
 
 # monthly changes in data
@@ -622,18 +699,23 @@ Sampson.coli.monthly.summaries <- Sampson_fecal %>%
 Sampson.coli.seasons <- ggplot(Sampson.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+  ggtitle("Sampson County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Sampson.coli.seasons)
 ```
 
 ```{r, Wayne County}
 ##Wayne County
+Wayne_results <-read_csv("./wayne_results.csv")
+Wayne_station <-read_csv("./wayne_station.csv")
 
 #import Wayne count data sets for site infromation and results
 #join the two datasets together via the "MonitoringLocationIdentifier" column
-Wayne.processed <- left_join(wayne_results, wayne_station, by= "MonitoringLocationIdentifier")
+Wayne.processed <- left_join(Wayne_results, Wayne_station, by= "MonitoringLocationIdentifier")
 
 # Set date to date format
 Wayne.processed$ActivityStartDate <- as.Date(Wayne.processed$ActivityStartDate, format ="%m/%d/%y")
@@ -642,8 +724,12 @@ create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
 Wayne.processed$ActivityStartDate <-create.early.dates(Wayne.processed$ActivityStartDate)
 Wayne.processed$ActivityStartDate <- as.Date(Wayne.processed$ActivityStartDate, format= "%Y%m%d")
 
+Wayne.processed.dates<- Duplin.processed%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+
 #data-wrangling
-Wayne_fecal <- Wayne.processed%>%
+Wayne_fecal <- Wayne.processed.dates%>%
   select(Date = ActivityStartDate, 
          Fecal_Coliform_Value = ResultMeasureValue,
          Units = `ResultMeasure/MeasureUnitCode`) 
@@ -673,10 +759,13 @@ Wayne.coli.year.summaries <- Wayne_fecal %>%
 Wayne.coli.years <- ggplot(Wayne.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Year")+
                      #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Wayne County")+
+  theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 1200)+
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Wayne.coli.years)
 
 # monthly changes in data
@@ -696,11 +785,61 @@ Wayne.coli.monthly.summaries <- Wayne_fecal %>%
 Wayne.coli.seasons <- ggplot(Wayne.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
   scale_x_continuous(name = "Month",
                      breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
-    labs(y = "Fecal coliforms (cfu / 100 ml)") 
+  ggtitle("Wayne County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 print(Wayne.coli.seasons)
 ```
+
+```{r, combination plots of Case Studies}
+
+CombinedPlotYears <-cowplot::plot_grid(Greene.coli.years+ theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(), axis.title.x = element_blank() ), 
+                   Pitt.coli.years + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(), axis.title.x = element_blank() ), 
+                   Duplin.coli.years,
+                   Lenoir.coli.years + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(),axis.title.x = element_blank() ),
+                   Sampson.coli.years + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank()),
+                  Wayne.coli.years + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank()),
+                   ncol=2,
+                   labels = "auto")
+print(CombinedPlotYears)
+
+CombinedPlotSeasons <-cowplot::plot_grid(Greene.coli.seasons+ theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(), axis.title.x = element_blank() ), 
+                   Pitt.coli.seasons + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(), axis.title.x = element_blank() ), 
+                   Duplin.coli.seasons+ theme(axis.title.y = element_text(vjust=4)),
+                   Lenoir.coli.seasons + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank(),axis.title.x = element_blank() ),
+                   Sampson.coli.seasons + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank()),
+                  Wayne.coli.seasons + theme(axis.text.y = element_blank(),
+                                    axis.title.y = element_blank()),
+                   ncol=2,
+                   labels = "auto")
+
+
+print(CombinedPlotSeasons)
+```
+
+
+```{r}
+#explore idea of violin plot
+
+violin.plot <- ggplot(Wayne_fecal, aes(x= Date, y= Fecal_Coliform_Value, fill = Date ))+
+  geom_violin(draw_quantiles = 0.50)+
+  ylim(0, 1000)
+print(violin.plot)
+  
+```
+
 
 #how to write a caption for your figures
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Yearly median concentrations of cadmium and lead in *Mytilus edulis* ICES monitoring data from 1979 to 2018."}

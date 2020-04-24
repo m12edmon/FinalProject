@@ -1,0 +1,415 @@
+---
+title: "NWIS_STORET_Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+getwd()
+#install.packages("dataRetrieval")
+library(dataRetrieval)
+library(tidyverse)
+library(cowplot)
+library(lubridate)
+library(viridis)
+library(readr)
+library(dplyr)
+library(agricolae)
+
+# Set theme
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right")
+theme_set(mytheme)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r STORET and NWIS Data}
+
+#import dataset
+all_fecal_coliform_data_results <-read_csv("./all_fecal_coliform_data_results.csv")
+all_fecal_coliform_stations <-read_csv("./all_fecal_coliform_stations.csv")
+
+#join the two datasets together via the "MonitoringLocationIdentifier" column
+All_fc_date <- left_join(all_fecal_coliform_data_results , all_fecal_coliform_stations, by= "MonitoringLocationIdentifier")
+
+#reset Date column as a date, include code for dates prior to 1970
+class(All_fc_date$ActivityStartDate)
+All_fc_date$ActivityStartDate <-as.Date(All_fc_date$ActivityStartDate, format= "%m/%d/%y")
+All_fc_date$ActivityStartDate <-format(All_fc_date$ActivityStartDate, "%y%m%d")
+create.early.dates <-(function(d){paste0(ifelse(d>191231,"19", "20"),d)})
+All_fc_date$ActivityStartDate <-create.early.dates(All_fc_date$ActivityStartDate)
+All_fc_date$ActivityStartDate<- as.Date(All_fc_date$ActivityStartDate, format= "%Y%m%d")
+
+#All_fc$ActivityStartDate <- as.Date(All_fc$ActivityStartDate) 
+#filter(All_fc, ActivityStartDate >= "1970-01-01", ActivityStartDate <= "2018-12-10")
+
+All_fc <- All_fc_date%>%
+  filter(ActivityStartDate > as.Date("1970-01-01"))%>%
+  filter(ActivityStartDate < as.Date("2018-12-21"))
+```
+
+```{r data wrangle}
+## data wrangle 
+fecal_total.processed <- All_fc %>%
+  select(Organization_Id = OrganizationIdentifier.x,
+         Organization_Name = OrganizationFormalName.x,
+         Monitoring_LocationID = MonitoringLocationIdentifier,
+         Monitoring_Location_Name = MonitoringLocationName,
+         Monitoring_Location_Type = MonitoringLocationTypeName,
+         HUC_Code = HUCEightDigitCode,
+         Lat = LatitudeMeasure,
+         Long = LongitudeMeasure,
+         County_Code = CountyCode, 
+         Activity_Type_Code = ActivityTypeCode,
+         Activity_Media_Name = ActivityMediaName,
+         Activity_Media_Subdivision= ActivityMediaSubdivisionName,
+         Date = ActivityStartDate,
+         Activity_Start_Time = `ActivityStartTime/Time`,
+         Hydrologic_Condition = HydrologicCondition,
+         Hydrologic_Event = HydrologicEvent,
+         Characteristic = CharacteristicName,
+         FecalValue = ResultMeasureValue,
+         Results_Units =`ResultMeasure/MeasureUnitCode`,
+         Results_Status = ResultStatusIdentifier,
+         Result_Value = ResultValueTypeName,
+         USGPS_code =USGSPCode,
+         Detection_Quantitation_Limit_text = DetectionQuantitationLimitTypeName,
+         #Result_Laboratory_Comment = ResultLaboratoryCommentText,
+         Provider_Org = ProviderName.y) 
+ 
+fecal_total_processed <- filter(fecal_total.processed,  Monitoring_Location_Type!= "Well" )
+
+#data-wrangle
+fecal_total <- fecal_total_processed %>%
+  select(Date, 
+         County_Code, 
+         FecalValue,
+         Results_Units)
+view(fecal_total)
+
+fecal_total$County_Code <-as.factor(fecal_total$County_Code)
+fecal_total_processed$County_Code <-as.factor(fecal_total_processed$County_Code)
+```
+
+
+## Exploratory Plots & Graphs
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Fecal Coliform Concentrations in Surface Waters by County"}
+
+Figure_2 <- ggplot(fecal_total_processed, aes(x=County_Code, y=FecalValue, color = County_Code))+
+  geom_line()+
+  scale_color_viridis_d()+
+  ylim(0, 15000) +
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+  guides(col = guide_legend(ncol = 20), shape = guide_legend(override.aes = list(size = 3)))
+print(Figure_2 + ggtitle("Fecal Coliform Concentrations by County"))
+
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exceeded Fecal Coliform Concentrations in Surface Waters by County"}
+
+##Exploratory Graph
+
+fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
+  na.omit()
+
+#Exploratory exceedance graph
+fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+  geom_point() +
+  scale_color_viridis_d()+
+  scale_y_continuous(breaks = seq(200, 5000, by = 5000))+
+  ylim(200, 50000)+
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
+```
+
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Samples Per County"}
+#exploratory bar graph
+explore.bar.graph <-ggplot(fecal_total, aes(x =County_Code)) +
+  geom_bar()+
+  labs(x = "N.C. County", y= "Samples Collected")+
+  theme(axis.text.x = element_text(angle = 90, size = 8))
+print(explore.bar.graph+ ggtitle("Exploratory Bar Graph"))
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Box Plot of Fecal Coliform Data across N.C. Counties"}
+#exploratory box plot
+explore.box <- ggplot(fecal_total) +
+  geom_boxplot(aes(x = County_Code, y = FecalValue, color= County_Code))+
+  scale_color_viridis_d()+
+  ylim(0, 1000)+
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
+  guides(col = guide_legend(ncol = 20))
+print(explore.box + ggtitle("Exploratory Box Plot"))
+  
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Scatter Plot Representation of Fecal Coliform Concentrations in N.C. Counties"}
+#exploratory scatter plot
+explore.scatter.county <-ggplot(fecal_total) +
+  geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
+  scale_color_viridis_d(option = "magma")+
+  ylim(0, 0000)+
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
+  guides(col = guide_legend(ncol = 15))
+print(explore.scatter.county + ggtitle("Exploratory Scatter Plot"))
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Concentrations from 1970-2018"}
+explore.scatter.date <-  ggplot(fecal_total) +
+  geom_line(aes(x = Date, y = FecalValue))+
+  ylim(0, 50000)+
+  labs(x = "Year", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))
+print(explore.scatter.date + ggtitle("Exploratory Concentrations over Time Scatter Plot"))
+
+fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
+```
+
+###Exploratory Plots Case Study
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Location of case studies in relation to CAFOs"}
+
+#insert GIS PDF of case study location
+```
+
+##Exploratory Plots Case Study- Greene
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Greene County, N.C."}
+
+Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Greene.F.coli.plot+ ggtitle("Greene County Fecal Coliform Concentrations over Time"))
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Greene County, N.C. from 1970- 2018"}
+
+Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+  ggtitle("Greene County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylim(0, 2000)+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Greene County, N.C."}
+Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Greene County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Greene.coli.seasons)
+
+```
+
+
+##Exploratory Plots Case Study- Pitt
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C."}
+
+Pitt.F.coli.plot <- ggplot(Pitt_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Pitt.F.coli.plot+ ggtitle("Pitt County Fecal Coliform Concentrations over Time"))
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C. from 1970- 2018"}
+Pitt.coli.years <- ggplot(Pitt.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+  ggtitle("Pitt County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylim(0, 1100)+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Pitt.coli.years)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Pitt County, N.C"}
+Pitt.coli.seasons <- ggplot(Pitt.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+    ggtitle("Pitt County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Pitt.coli.seasons)
+```
+
+
+##Exploratory Plots Case Study- Duplin
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C."}
+Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Duplin.F.coli.plot)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap=Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C. from 1970- 2018"}
+
+Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+  ggtitle("Duplin County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylim(0, 900)+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Duplin.coli.years)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Duplin County, N.C"}
+Duplin.coli.seasons <- ggplot(Duplin.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Duplin County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Duplin.coli.seasons)
+
+```
+
+
+##Exploratory Plots Case Study- Lenoir
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
+Lenoir.F.coli.plot <- ggplot(Lenoir_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Lenoir.F.coli.plot)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Lenoir County, N.C. from 1970- 2018"}
+Lenoir.coli.years <- ggplot(Lenoir.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Lenoir County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylim(0, 1600)+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Lenoir.coli.years)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
+Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+   ggtitle("Lenoir County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Lenoir.coli.seasons)
+```
+
+
+##Exploratory Plots Case Study- Sampson
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C."}}
+Sampson.F.coli.plot <- ggplot(Sampson_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Sampson.F.coli.plot)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C. from 1970- 2018"}
+Sampson.coli.years <- ggplot(Sampson.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ylim(0, 1200)+
+  ggtitle("Sampson County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Sampson.coli.years)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Sampson County, N.C"}
+Sampson.coli.seasons <- ggplot(Sampson.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Sampson County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Sampson.coli.seasons)
+```
+
+
+##Exploratory Plots Case Study- Wayne
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C."}
+
+Wayne.F.coli.plot <- ggplot(Wayne_fecal, aes(x = Date)) +
+  geom_line(aes(y = Fecal_Coliform_Value)) +
+  ylim(0, 10200)+
+  labs(x = "Year", 
+       y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Wayne.F.coli.plot)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C. from 1970- 2018"}
+Wayne.coli.years <- ggplot(Wayne.coli.year.summaries, aes(x = year)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Year")+
+                     #breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Wayne County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylim(0, 1200)+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Wayne.coli.years)
+```
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Wayne County, N.C"}
+Wayne.coli.seasons <- ggplot(Wayne.coli.monthly.summaries, aes(x = month)) +
+  geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
+  geom_line(aes(y = Median)) +
+  geom_hline(yintercept=200, linetype="dashed", color = "blue")+
+  scale_x_continuous(name = "Month",
+                     breaks = c(1,2,3,4,5,6,7,8,9,10,11,12)) +
+  ggtitle("Wayne County")+
+  theme(plot.title = element_text(hjust = 0.5))+
+    labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Wayne.coli.seasons)
+
+```
+
