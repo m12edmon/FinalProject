@@ -79,7 +79,7 @@ fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
 fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
   geom_line() +
   labs(x = "N.C. County", y = "Fecal coliforms (cfu / 100 ml)") +
-  theme(legend.position = "top")
+  theme(legend.position = "bottom")
 print(fecal_exceed.plot)
 
 #for plotting purposes to not confuse
@@ -106,7 +106,11 @@ ggplot(fecal_total) +
 ggplot(fecal_total) +
   geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
   ylim(0, 10000)+
-  labs(theme(legend.position = "right"))
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
+  guides(col = guide_legend(ncol = 15))
+
+y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")
 
 ggplot(fecal_total) +
   geom_point(aes(x = Date, y = FecalValue))+
@@ -164,6 +168,13 @@ fecalc.kw #chi-squared statistics = 33768, p-valye < 2.2e-16
 ### Data for Individual Counties
 ## Greene County
 ```{r, Greene County}
+explore.scatter <-ggplot(fecal_total, aes(x = County_Code, y = FecalValue, color = County_Code)) +
+  geom_point()+
+  scale_color_viridis_d(option = "magma")+
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
+print(explore.scatter + ggtitle("Exploratory Scatter Plot"))
+
 ##Greene County
 #had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
 

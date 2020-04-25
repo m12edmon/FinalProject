@@ -269,10 +269,11 @@ fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
 fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
  geom_point() +
  scale_color_viridis_d()+
+  
 ylim(0, 50000)+
 labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
- theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
-guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+ theme(legend.position = "bottom")+
+guides(col = guide_legend(ncol = 18))
 print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
 ```
 
@@ -301,14 +302,13 @@ print(explore.box + ggtitle("Exploratory Box Plot"))
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Scatter Plot Representation of Fecal Coliform Concentrations in N.C. Counties"}
 #exploratory scatter plot
-explore.scatter.county <-ggplot(fecal_total) +
-  geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
+explore.scatter <-ggplot(fecal_tota, aes(x = County_Code, y = FecalValue, color = County_Code)) +
+  geom_point()+
   scale_color_viridis_d(option = "magma")+
-  ylim(0, 0000)+
   labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
   theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
   guides(col = guide_legend(ncol = 15))
-print(explore.scatter.county + ggtitle("Exploratory Scatter Plot"))
+print(explore.scatter + ggtitle("Exploratory Scatter Plot"))
 ```
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Concentrations from 1970-2018"}
@@ -331,6 +331,7 @@ fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
 ##Exploratory Plots Case Study- Greene
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Greene County, N.C."}
 
+
 Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -350,6 +351,7 @@ Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
   theme(plot.title = element_text(hjust = 0.5))+
   ylim(0, 2000)+
     labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
+print(Greene.coli.years + ggtitle("Greene County"))
 ```
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Greene County, N.C."}
@@ -363,7 +365,7 @@ Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
   ggtitle("Greene County")+
   theme(plot.title = element_text(hjust = 0.5))+
     labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
-print(Greene.coli.seasons)
+print(Greene.coli.seasons+ ggtitle("Greene County Fecal Coliform Concentrations over Time"))
 
 ```
 

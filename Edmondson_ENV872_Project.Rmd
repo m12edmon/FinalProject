@@ -3,11 +3,11 @@ title: "Analyzing Fecal Coliform Concentrations within Surface Waters of North C
 author: "Masha Edmondson"
 geometry: margin=2.54cm
 output:
-  word_document: default
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
+  word_document: default
 mainfont: Times New Roman
 subtitle: https://github.com/m12edmon/FinalProject.git
 fontsize: 12pt
@@ -257,6 +257,14 @@ print(Figure_2 + ggtitle("Fecal Coliform Concentrations by County"))
 
 ##Exploratory Graph
 
+Figure_5 <- ggplot(fecal_total_processed, aes(x=County_Code, y=FecalValue, color = County_Code))+
+  geom_jitter(alpha -0.2)+
+  scale_color_viridis_d()+
+  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))
+print(Figure_5 + ggtitle("Exploratory Scatter Plot"))
+  
+
+
 fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
   na.omit()
 
@@ -410,7 +418,10 @@ summary(Greene_fc.lm)
 #had one of the highest ranking fecal colimform data in all of N.C. some samples over 10,000 cfu/100ml
 
 #import Pitt count data sets for site infromation and results
-
+Pitt_biologicalresults <-read_csv("./Pitt_biologicalresults.csv")
+Pitt_station <-read_csv("./Pitt_station.csv")
+  
+  
 #join the two datasets together via the "MonitoringLocationIdentifier" column
 Pitt.processed <- left_join(Pitt_biologicalresults, Pitt_station, by= "MonitoringLocationIdentifier")
 
@@ -912,7 +923,7 @@ print(CombinedPlotSeasons)
 
 
 
-## 1. Rationale and Research Questions
+### 1. Rationale and Research Questions
 
 North Carolina is a national leader in livestock production, and is the nation’s second leading producer of hogs. The vast majority of livestock are grown on concentrated animal feeding operations (“CAFOs”) designed to maximize production efficiency by raising as many animals as possible, as quickly as possible. Though CAFOs have resulted in massive expansion and record profits in the livestock industry, they present significant waste management challenges. CAFOs have been demonstrated to adversely affect ground and surface water quality. The produced livestock waste can contaminate surface and groundwater sources by seeping into the soil from waste storage lagoons, through runoff from land application sites, or during significant rainfall and storm events. Harmful nutrients such as nitrogen, phosphorus, and fecal matter can be deposited into waterways, which poses major threats to the environment and human health.Currently, there are few regulations governing how water quality monitoring is conducted in the state, and a lack of no clear enforcement of water quality regulations for this industry. Several industrial animal feeding operations are not required to test for harmful contaminates annually, which poses risks to the health of the community, the environment, and the economy. 
 
@@ -922,33 +933,39 @@ This study investigates the spatial distribution of Fecal Coliform within surfac
 
 \newpage
 
-## 2. Dataset Information
+### 2. Dataset Information
 
-#2.1 Water Quality Portal (WQP)
+##2.1 Water Quality Portal (WQP)
+
 The dataset used for this analysis was obtained from the national Water Quality Portal (WQP) at http://www.waterqualitydata.us/portal/. The WQP is a cooperative service sponsored by the United States Geological Survey (USGS), the Environmental Protection Agency (EPA), and the National Water Quality Monitoring Council (NWQMC). The WQP combines physical, chemical, and biological water quality data from multiple data sources, across decades, at one location, and creates a dataset. It provides access to 250 million water quality data records collected across 400 federal, state, tribal agencies, and other stakeholders. 
 
 
-#2.2 Scope of Analysis
+##2.2 Scope of Analysis
+
 For the scope of this analysis, surface water data was collected by WQP from the National Water Information System (NWIS) web interface and the STORET data warehouse for all 100 counties in North Carolina; however, not all counties had recorded sample data. The data was further filtered by a microbiological characteristic group with the specific parameter of fecal coliform (31625) that uses a 0.7 micron membrane filter (mFC) sample method. This specific parameter was chosen because it is specifically associated with warm-blooded animals, and is a more precise way of estimating waste contamination in waterways. The microbiological contaminate E. coli was also considered in this analysis; however, there is little to no sample data recorded on this parameter across all counties in N.C.. Another fecal coliform parameter 31616 occasionally appears in the downloaded dataset. This parameter is identical to 31625 except that it uses a 0.45 micron membrane filter. The use of the 0.45 micron membrane filter is not recommended for fecal coliform analysis, but this method was used extensively in the past. The earliest historical record of this sampled parameter began in January of 1940. In order to ensure a consistent time frame, the analysis considered data collection that began on January 1, 1970 until December 31, 2018. This time frame was selected because 1970 was the first year to have at least one fecal coliform sample recorded each month. This advanced search returned 4,618 water quality monitoring stations observed across 98 counties in North Carolina (Figure 1).
 \newpage
 
 ![Figure 1. Location of all North Carolina Permitted swine concentrated animal feeding operations (CAFOs) in relation to USGS STORET and NWIS water quality data sites.](swine_CAFO.png)
 \newpage
 
-#2.3 Data-Wrangling Process
+##2.3 Data-Wrangling Process
+
 The data from WQP was downloaded in two parts: a csv file of the site information and a csv file of the microbiological sample results. These sites and results datasheets have a common data field, “monitoring location ID”, that was used to join the two datasets together. The initial downloaded dataset contained 73 columns in the raw dataset that was then filtered to 25 columns in the processed dataset.  Further analysis for case studies wrangled the dataset into four columns. 
 
-#2.4 Dataset Structure
+##2.4 Dataset Structure
+
 The processed dataset contains 25 columns, which are described in Table 2. Further analysis for case studies wrangled the dataset into five columns shown in Table 3. A breakdown of North Carolina counties by their associated USGS code is provided in Table 4.
 
 \newpage
 
-## 3. Exploratory Data Analysis 
+### 3. Exploratory Data Analysis 
+
 The raw microbiological data collected contained superfluous information that needed to be removed to only contain information pertinent to the analysis (Table 2). Fecal coliform samples were collected from 4,618 water quality monitoring stations observed across 98 counties in North Carolina. Fecal coliform was near or above the EPA recommend concentrations across 98 sites in surface waters (Figure 2). Concentrations ranged from 0-31,000,000 cfu/100 ml, and upon further exploration, 95 counties recorded samples exceeding the EPA recommend 200 cfu/100 ml concentration. The remaining three North Carolina counites: Gates, Pamlico, and Dare, all had concentrations well below the recommend limit. 
 
-#3.1 Exploration of Fecal Coliform Concentrations in relation to N.C. County Data 
+##3.1 Exploration of Fecal Coliform Concentrations in relation to N.C. County Data
+
 Visual data exploration of the recorded samples of fecal coliform are illustrated in Figures 2 through Figure 7. This initial exploration of data provided insights into potential correlations between counties and fecal coliform concentrations, as well as how concentrations changed over the past 48 years.
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Fecal Coliform Concentrations in Surface Waters by County"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 2. Fecal Coliform Concentrations in Surface Waters by County"}
 
 Figure_2 <- ggplot(fecal_total_processed, aes(x=County_Code, y=FecalValue, color = County_Code))+
   geom_line()+
@@ -960,7 +977,7 @@ Figure_2 <- ggplot(fecal_total_processed, aes(x=County_Code, y=FecalValue, color
 print(Figure_2 + ggtitle("Fecal Coliform Concentrations by County"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exceeded Fecal Coliform Concentrations in Surface Waters by County"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 3: Exceeded Fecal Coliform Concentrations in Surface Waters by County"}
 
 ##Exploratory Graph
 
@@ -968,18 +985,18 @@ fecal_exceed <- filter(fecal_total, FecalValue >= 200 )%>%
   na.omit()
 
 #Exploratory exceedance graph
-fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
-  geom_point() +
-  scale_color_viridis_d()+
-  scale_y_continuous(breaks = seq(200, 5000, by = 5000))+
-  ylim(200, 50000)+
-  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
-  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
-print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
+#fecal_exceed.plot <-ggplot(fecal_exceed, aes(x = County_Code, y=FecalValue, color = County_Code )) +
+#  geom_point() +
+#  scale_color_viridis_d()+
+#  scale_y_continuous(breaks = seq(200, 5000, by = 5000))+
+#  ylim(200, 50000)+
+ # labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+ # theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 8, hjust=0.5, vjust = .5, face = "plain"), legend.title = element_text(color = "black", size = 8),legend.text = element_text(size = 5))+
+#  guides(col = guide_legend(ncol = 18), shape = guide_legend(override.aes = list(size = 1)))
+#print(fecal_exceed.plot+ ggtitle("N.C. Counties that Exceed 200 cfu/100ml Threshold"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Samples Per County"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 4: Recorded Fecal Coliform Samples Per County"}
 #exploratory bar graph
 explore.bar.graph <-ggplot(fecal_total, aes(x =County_Code)) +
   geom_bar()+
@@ -988,7 +1005,7 @@ explore.bar.graph <-ggplot(fecal_total, aes(x =County_Code)) +
 print(explore.bar.graph+ ggtitle("Exploratory Bar Graph"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Box Plot of Fecal Coliform Data across N.C. Counties"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 5. Box Plot of Fecal Coliform Data across N.C. Counties"}
 #exploratory box plot
 explore.box <- ggplot(fecal_total) +
   geom_boxplot(aes(x = County_Code, y = FecalValue, color= County_Code))+
@@ -1001,19 +1018,19 @@ print(explore.box + ggtitle("Exploratory Box Plot"))
   
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Scatter Plot Representation of Fecal Coliform Concentrations in N.C. Counties"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 6. Scatter Plot Representation of Fecal Coliform Concentrations in N.C. Counties"}
 #exploratory scatter plot
-explore.scatter.county <-ggplot(fecal_total) +
-  geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
-  scale_color_viridis_d(option = "magma")+
-  ylim(0, 0000)+
-  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
-  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
-  guides(col = guide_legend(ncol = 15))
-print(explore.scatter.county + ggtitle("Exploratory Scatter Plot"))
+#explore.scatter.county <-ggplot(fecal_total) +
+#  geom_point(aes(x = County_Code, y = FecalValue, color = County_Code))+
+#  scale_color_viridis_d(option = "magma")+
+#  ylim(0, 0000)+
+##  labs(x = "N.C. County", y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)"))+
+#  theme(legend.position = "bottom", axis.text.x = element_text(angle = 90, size = 7))+
+#  guides(col = guide_legend(ncol = 15))
+#print(explore.scatter.county + ggtitle("Exploratory Scatter Plot"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Recorded Fecal Coliform Concentrations from 1970-2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 7. Recorded Fecal Coliform Concentrations from 1970-2018"}
 
 explore.scatter.date <-  ggplot(fecal_total) +
   geom_line(aes(x = Date, y = FecalValue))+
@@ -1024,13 +1041,14 @@ print(explore.scatter.date + ggtitle("Exploratory Concentrations over Time Scatt
 fecal_total$County_Code <- as.numeric(fecal_total$County_Code)
 ```
 
-#3.2 Exploration of the Proposed Six Case Study Counties 
+##3.2 Exploration of the Proposed Six Case Study Counties 
+
 From the exploratory analysis above, six counties with the highest concentrations of swine concentrated animal feeding operations had notable exceedances in fecal coliform concentrations in surface waters (Table 5). Additional exploratory analysis was conducted to determine emerging trends in the relationship between fecal coliform concentrations across years and across seasons. Visual data exploration of the recorded samples of fecal coliform are illustrated in Figures 9 through Figure 26. A map of the extent of the case study area is provided in Figure 8.
 
 
 
-![Figure 8. Location of case studies in relation to CAFOs](extent_map.png)
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Greene County, N.C."}
+![Figure 8. Location of case studies in relation to CAFOs.](extent_map.png)
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 8. Exploratory plot of recorded fecal coliform concentations in Greene County, N.C."}
 
 Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
@@ -1040,7 +1058,7 @@ Greene.F.coli.plot <- ggplot(Greene_fecal, aes(x = Date)) +
 print(Greene.F.coli.plot+ ggtitle("Greene County Fecal Coliform Concentrations over Time"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Greene County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="FIgure 9. Exploratory plot of recorded fecal coliform concentations in Greene County, N.C. from 1970- 2018"}
 
 Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
@@ -1053,7 +1071,7 @@ Greene.coli.years <- ggplot(Greene.coli.year.summaries, aes(x = year)) +
     labs(y = expression("Fecal coliforms filtered to 0.7 " * mu *m *  " (cfu / 100 ml)")) 
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Greene County, N.C."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 10. Exploratory plot of recorded seasonal fecal coliform concentations in Greene County, N.C."}
 Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1066,7 +1084,7 @@ Greene.coli.seasons <- ggplot(Greene.coli.monthly.summaries, aes(x = month)) +
 print(Greene.coli.seasons)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 11. Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C."}
 Pitt.F.coli.plot <- ggplot(Pitt_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -1075,7 +1093,7 @@ Pitt.F.coli.plot <- ggplot(Pitt_fecal, aes(x = Date)) +
 print(Pitt.F.coli.plot+ ggtitle("Pitt County Fecal Coliform Concentrations over Time"))
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 12. Exploratory plot of recorded fecal coliform concentations in Pitt County, N.C. from 1970- 2018"}
 Pitt.coli.years <- ggplot(Pitt.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1088,7 +1106,7 @@ Pitt.coli.years <- ggplot(Pitt.coli.year.summaries, aes(x = year)) +
 print(Pitt.coli.years)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Pitt County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 13. Exploratory plot of recorded seasonal fecal coliform concentations in Pitt County, N.C"}
 Pitt.coli.seasons <- ggplot(Pitt.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1101,7 +1119,7 @@ Pitt.coli.seasons <- ggplot(Pitt.coli.monthly.summaries, aes(x = month)) +
 print(Pitt.coli.seasons)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 14. Exploratory plot of recorded fecal coliform concentations in Duplin County, N.C."}
 Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -1110,7 +1128,7 @@ Duplin.F.coli.plot <- ggplot(Duplin_fecal, aes(x = Date)) +
 print(Duplin.F.coli.plot)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Duplin County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 15. Exploratory plot of recorded seasonal fecal coliform concentations in Duplin County, N.C"}
 
 Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
@@ -1124,7 +1142,7 @@ Duplin.coli.years <- ggplot(Duplin.coli.year.summaries, aes(x = year)) +
 print(Duplin.coli.years)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Duplin County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 16. Exploratory plot of recorded seasonal fecal coliform concentations in Duplin County, N.C"}
 Duplin.coli.seasons <- ggplot(Duplin.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1138,7 +1156,7 @@ print(Duplin.coli.seasons)
 
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 17. Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
 Lenoir.F.coli.plot <- ggplot(Lenoir_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -1147,7 +1165,7 @@ Lenoir.F.coli.plot <- ggplot(Lenoir_fecal, aes(x = Date)) +
 print(Lenoir.F.coli.plot)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Lenoir County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 18. Exploratory plot of recorded fecal coliform concentations in Lenoir County, N.C. from 1970- 2018"}
 Lenoir.coli.years <- ggplot(Lenoir.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1161,7 +1179,7 @@ Lenoir.coli.years <- ggplot(Lenoir.coli.year.summaries, aes(x = year)) +
 print(Lenoir.coli.years)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 19. Exploratory plot of recorded seasonal fecal coliform concentations in Lenoir County, N.C"}
 Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1174,7 +1192,7 @@ Lenoir.coli.seasons <- ggplot(Lenoir.coli.monthly.summaries, aes(x = month)) +
 print(Lenoir.coli.seasons)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 20. Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C."}
 Sampson.F.coli.plot <- ggplot(Sampson_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
   ylim(0, 10200)+
@@ -1183,7 +1201,7 @@ Sampson.F.coli.plot <- ggplot(Sampson_fecal, aes(x = Date)) +
 print(Sampson.F.coli.plot)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 21. Exploratory plot of recorded fecal coliform concentations in Sampson County, N.C. from 1970- 2018"}
 Sampson.coli.years <- ggplot(Sampson.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1197,7 +1215,7 @@ Sampson.coli.years <- ggplot(Sampson.coli.year.summaries, aes(x = year)) +
 print(Sampson.coli.years)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Sampson County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 22. Exploratory plot of recorded seasonal fecal coliform concentations in Sampson County, N.C"}
 Sampson.coli.seasons <- ggplot(Sampson.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1210,7 +1228,7 @@ Sampson.coli.seasons <- ggplot(Sampson.coli.monthly.summaries, aes(x = month)) +
 print(Sampson.coli.seasons)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 23. Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C."}
 
 Wayne.F.coli.plot <- ggplot(Wayne_fecal, aes(x = Date)) +
   geom_line(aes(y = Fecal_Coliform_Value)) +
@@ -1220,7 +1238,7 @@ Wayne.F.coli.plot <- ggplot(Wayne_fecal, aes(x = Date)) +
 print(Wayne.F.coli.plot)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C. from 1970- 2018"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 24. Exploratory plot of recorded fecal coliform concentations in Wayne County, N.C. from 1970- 2018"}
 Wayne.coli.years <- ggplot(Wayne.coli.year.summaries, aes(x = year)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1234,7 +1252,7 @@ Wayne.coli.years <- ggplot(Wayne.coli.year.summaries, aes(x = year)) +
 print(Wayne.coli.years)
 ```
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Exploratory plot of recorded seasonal fecal coliform concentations in Wayne County, N.C"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 25. Exploratory plot of recorded seasonal fecal coliform concentations in Wayne County, N.C"}
 Wayne.coli.seasons <- ggplot(Wayne.coli.monthly.summaries, aes(x = month)) +
   geom_ribbon(aes(ymin = quant25, ymax = quant75), alpha = 0.3) +
   geom_line(aes(y = Median)) +
@@ -1248,37 +1266,40 @@ print(Wayne.coli.seasons)
 ```
 \newpage
 
-## 4. Analysis
+### 4. Analysis
+
 Generalized linear models (GLMs) were used throughout this analysis to determine if there is a linear combination of the effects of categorial or continuous explanatory variables. The inclusion of these models allows a fit to the main effects of both categorical and continuous explanatory variables as well as their interactions. The GLM is based on the assumption that the data residuals approximate a normal distribution (or a linearly transformed normal distribution). For tests that analyze categorical explanatory variables, the assumption is that the variance in the response variable is equal among groups. It is important to note that environmental data often violate the assumptions of normality and equal variance, and will often proceed with a GLM even if these assumptions are violated. 
 
 
-#4.1 One-sample T-Test
+##4.1 One-sample T-Test
 
 The first statistical analysis will test the null hypothesis that the mean of fecal coliform concentrations in North Carolina are below the regulatory standard of 200 cfu/100ml. The first assumption of the normal distribution is evaluated. The processed dataset was tested for normality using the Shapiro-Wilks normality test. This test determined that for all 100 N.C. counties fecal coliform concentrations are significantly different from a normal distribution, and to reject the null hypothesis (Shapiro-Wilks normality test, W = 0.30-0.07 ,  p-value < 0.0001). The p-value for the Shapiro-Wilk test is <0.001 suggesting the data is not normally distributed. An additional normalcy tests, qqnorm and qqline, were applied to the dataset to determine the distribution (Figure ___). The normal Q-Q plot suggests that the data is approximately normal with a few outliers in the 4th quartile.
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="QQ plot results"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 26. QQ plot results"}
 #check to see if raw data is normally distributed
 qq.plot <-qqnorm(fecal_total$FecalValue); qqline(fecal_total$FecalValue) 
 ```
 
 The Bartlett test of homogeneity as used test to check for equal variance among the dataset. The null hypotheses is that the variance is the same for all product lines. Since the test statistic is greater than the critical value for the chi-square and the p-value is less than 0.001, there is a significant difference in the variances (Bartlett’s K-squared = 977974, df =99, p-value <0.001). This means that there is evidence to suggest that the variance in fecal coliform concentrations is different among North Carolina counties.
+\newpage
 
-#4.2	One-Way ANOVA
+##4.2	One-Way ANOVA
 
 A one-way ANOVA test was preformed to determine if there was a significant correlation between N.C. counties and fecal coliform concentrations. This test requires a second assumption to be complied, which is that the variance of the groups is equal across groups. Understanding that the data set is not perfectly normal, to test for the homogeneity of variance across groups a Bartlett test was used as well as a Fligner-Killeen test. 
 
 The Fligner-Killeen test of homogeneity of variances says that the variance across groups is not homogeneous, but with a p-value close to 0.05 (med chi-squared = 44111, p-value = 0.001 < 0.05). For this reason, for testing if there are significant differences between the fecal coliform concentrations among N.C. counties, it is used a One-way ANOVA test and a Non-parametric equivalent of ANOVA, the Kruskal-Wallis Test.
 
 A one-way ANOVA test revealed that there is significant correlation between N.C. counties and fecal coliform concentrations (p-value < 0.001). The linear model reveled that eight N.C. counties are significantly different (multiple R-squared: 0.00244, F-statistic: 5.411, p-value <0.01). The eight counties that are significantly different are Anson, Forsyth, Gaston, Martin, Mecklendburg, Rockingham, Richmond, Wayne. Both Davidson and Orange county had a slight correlation of fecal coliform with a p-value of 0.1. This analysis also revealed that there was no  clear significant impact on exceeding fecal coliform concentrations in proximity to swine CAFOs.
+\newpage
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Linear model of ANOVA"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 27. Linear model of ANOVA"}
 # ANOVA is robust against departures from normality.
 plot(all_fc.lm)
 ```
 
 
 To analyze which counties are different, post hoc tests: a Tukey multiple comparisons of means test for ANOVA and a Dunn’s test for Kruskal-Wallis were used. According to both tests, there is a significant difference between the fecal coliform concentrations for the different counties in N.C. (ANOVA; F = 5.41, df = 99, p < 2.2e-16) (Kruskal-Wallis chi-squared = 33796, df = 99, p-value < 2.2e-16). 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Box Plot of the distribution of the data"}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Figure 28. Box Plot of the distribution of the data"}
 
 Fecal.Totals.all.plot <- ggplot(fecal_total, aes(x = County_Code, y = FecalValue, color = County_Code)) +
   geom_boxplot() +
@@ -1291,9 +1312,9 @@ Fecal.Totals.all.plot <- ggplot(fecal_total, aes(x = County_Code, y = FecalValue
 print(Fecal.Totals.all.plot)
 ```
 
-#4.3	Time Series 
+##4.3	Time Series 
 
-Case studies were conducted for six counties in North Carolina that have the highest ratio of permitted swine CAFOs in the state. Time series graphs were created to assess emerging trends in fecal coliform concentrations across season and across the 48 year time frame (Figure ). 
+Case studies were conducted for six counties in North Carolina that have the highest ratio of permitted swine CAFOs in the state. Time series graphs were created to assess emerging trends in fecal coliform concentrations across season and across the 48 year time frame (Figure 30). 
 
 ![Figure 30. Yearly trends in Fecal Coliform Concentrations](Yearly_trends.png)
 
