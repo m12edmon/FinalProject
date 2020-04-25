@@ -22,6 +22,7 @@ ALl data for this repository was collected by the Water Quality Data Portal that
 ## Folder structure, file formats, and naming conventions 
 
 Folders:
+
 R Studio Final Project, which is a new R project file.
 README.md doument that describes the nature of the repository 
 R markdown document, which contains the coding for analysis of the data
@@ -69,15 +70,18 @@ For specific analysis of counties and fecal concentrations, filtering of data on
 
 ## Scripts and code
 Ongoing updates to scripts and code will continue throughout this analysis.
-I am currently using six packages to conduct anlaysis of my project as seen below: 
+I am currently using nine packages to conduct anlaysis of my project as seen below: 
 library(dataRetrieval)
 library(tidyverse)
 library(cowplot)
 library(lubridate)
+library(viridis)
 library(readr)
 library(dplyr)
+library(agricolae)
+library(knitr)
 
 I will also be using previous lessons that were conducted in the Environmental Data Analytics 2020 GitHub Respository, and Hydrology Repository.
 
 ## Quality assurance/quality control
-I would check for outliers in data to make sure nothing was out of range. I would only consider fecal coliforms filter to 0.7 (cfu/100 ml) because that is the most consistent data collection method for this parameter. I will only consider surface water ways (not groundwater wells or other types of aquifers). I am also only considering areas where there are swine CAFOs in my deeper analysis. Counties that have a high fecal concentration that do not have any recorded industrial famring activity will be noted but not included in the deeper analysis.
+I would check for outliers in data to make sure nothing was out of range. I would only consider fecal coliforms filter to 0.7 (cfu/100 ml) because that is the most consistent data collection method for this parameter. I will only consider surface water ways (not groundwater wells or other types of aquifers). I am also only considering areas where there are swine CAFOs in my deeper analysis. Counties that have a high fecal concentration that do not have any recorded industrial farming activity will be noted but not included in the deeper analysis. Finally I am only selecting data from 1970 to 2018. I chose this data frame because 19070 was the first recorded year to have a fecal sample condected all twelve months out of the year.
